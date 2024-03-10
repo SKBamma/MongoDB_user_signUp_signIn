@@ -1,4 +1,4 @@
-import { hash } from 'bcrypt';
+import { hash, compare } from 'bcrypt';
 import 'dotenv/config'
 import { User, userModel } from "./UserModel";
 import db_connect from './db_connect';
@@ -37,4 +37,17 @@ async function sign_up(user_email: string, plain_password: string, firstname?: s
 // sign_up("Wakil@gmail.com", "134gf34frg", "Wakil", "bamma");
 // sign_up("Raj@gmail.com", "gtrff541", "Raj", "bamma");
 
+/*
+sign_in(email: string, plain_password: string): boolean compare the plain password with the 
+hashed password and return true/false
+*/
+async function sign_in(user_email: string, plain_password: string): Promise<boolean> {
+    const user = await userModel.findOne(
+        { email: user_email });
+    if (!user) return false;
+    const password_match = await compare(plain_password, user.hashed_password);
+    return password_match ? true : false;
+
+}
+// sign_in("Raj@gmail.com", "gtrff541").then(console.log);
 
