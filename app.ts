@@ -82,3 +82,34 @@ async function create_temp_password(email: string) {
 }
 // create_temp_password("suresk@gmail.com");
 // ZhGB0TVVAIhyeBtGIud0RGTs9PYBhAUJ
+
+/*
+reset_password(email: string, temp_password: string, new_password: string): boolean, 
+check if the temp password match with the hased temp password and check 
+if it has not expired, if all okay, hash the new password and save it in the db,
+ and remove the temp password and expiration timestamp fields (use $unset operator).
+  Return a boolean confirmation if the reset flow was successful or not.
+*/
+async function reset_password(email: string, temp_password: string, new_password: string) {
+    // check if the temp password match with the hased temp password
+    const user = await userModel.findOne({ email });
+    if (!user) return false;
+    if (user.hashed_temp_password) {
+        const matched_passw = await compare(temp_password, user.hashed_temp_password);
+        return matched_passw ? true : false;
+    }
+    // check if it has not expired
+    if (user.temp_password_expiration_timestamp) {
+        if (Date.now() >= user.temp_password_expiration_timestamp) return false;
+    }
+    // if all okay, hash the new password and 
+    const hashed_temp_password = await hash(new_password, 10);
+    //save it in the db
+    const result = await userModel.updateOne(
+        { email },
+        {
+            $set: { hashed_password: hashed_temp_password },
+            $unset: { hashed_temp_password: "", temp_password_expiration_timestamp: "" }
+        }
+    )
+}
