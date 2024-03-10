@@ -1,5 +1,6 @@
 import { hash, compare } from 'bcrypt';
 import 'dotenv/config'
+import { generate } from "randomstring";
 import { User, userModel } from "./UserModel";
 import db_connect from './db_connect';
 
@@ -51,3 +52,33 @@ async function sign_in(user_email: string, plain_password: string): Promise<bool
 }
 // sign_in("Raj@gmail.com", "gtrff541").then(console.log);
 
+/*
+create_temp_password(email: string): void generate a new temporaty password using 
+Random String package, hash the temp password and save it in db along with an expiration
+ unix timestamp of 24 hours Date.now() + 8640000, and send the user an email with the 
+ temporary plain password.
+*/
+async function create_temp_password(email: string) {
+    //generate a new temporaty password using  Random String package
+    const temp_password = generate();
+
+    const hashed_temp_password1 = await hash(temp_password, 10);
+    /* hash the temp password and save it in db along with an expiration unix timestamp of 24 hours 
+    Date.now() + 8640000 */
+    const save_hashed_temp_password = await userModel.updateOne(
+
+        { email },
+        {
+            $set: {
+                hashed_temp_password: hashed_temp_password1,
+                temp_password_expiration_timestamp: Date.now() + 864000000
+
+
+            }
+        }
+    )
+    console.log(temp_password);
+    // console.log(save_hashed_temp_password);
+}
+// create_temp_password("suresk@gmail.com");
+// ZhGB0TVVAIhyeBtGIud0RGTs9PYBhAUJ
